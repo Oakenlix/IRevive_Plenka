@@ -4,6 +4,44 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 StringCaseSense, Locale
 
+Script_Version := 1.0
+
+Updated_Version := URLDownloadToVar("https://raw.githubusercontent.com/Oakenlix/IRevive_Plenka/main/Update")
+
+URLDownloadToVar(url) {
+ WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+ WebRequest.Open("GET", url)
+ WebRequest.Send()
+ Return, WebRequest.ResponseText
+}
+
+RegexMatch(Updated_Version, "\w.\w", Updated_Version)
+
+If (Script_Version != Updated_Version)
+{
+Updated_text := URLDownloadToVar("https://raw.githubusercontent.com/Oakenlix/IRevive_Brelki/main/Main")
+FileCreateDir, %A_ScriptDir%\Backups
+FileMove, %A_ScriptName%, %A_ScriptDir%\Backups\%A_Hour%%A_Min%-%A_DD%%A_MM%.ahk
+FileAppend, %Updated_text%, %A_ScriptName%
+Run, %A_ScriptName%
+ExitApp
+}
+; ####################################### Загрузка настроек
+LoadSettings()
+
+
+LoadSettings()
+{
+	global Setting := []
+	Loop, read, Settings.txt
+	{
+		StringSplit, Result, A_LoopReadLine, %A_Tab%
+		Setting[A_Index] := Result1
+	}
+	global USERNAME := Setting[1] ; Name
+	global SETONTOP := Setting[2] ; AlwaysOnTop
+	global ENABLE_FILTER := Setting[3] ; Filter
+}
 
 Center_X := A_ScreenWidth/2
 Center_Y := A_ScreenHeight/2
