@@ -1,0 +1,632 @@
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+StringCaseSense, Locale
+
+
+Center_X := A_ScreenWidth/2
+Center_Y := A_ScreenHeight/2
+
+O_Vse_GalochkiX := 290
+O_Vse_GalochkiY := 430
+O_EtiketkiX := 1100
+O_EtiketkiY := 370
+O_PoiskX := 430
+O_PoiskY := 360
+
+
+W_Vse_GalochkiX := 70
+W_Vse_GalochkiY := 470
+W_EtiketkiX := 350
+W_EtiketkiY := 415
+W_3tochkiX := 1295
+W_3tochkiY := 515
+W_1PostavkaX := 365
+W_1PostavkaY := 435
+
+
+Y_PoiskX :=  860
+Y_PoiskY :=  425
+Y_ZakazX := 200
+Y_ZakazY := 530
+
+
+:?:/я::
+SendInput %A_DD%.%A_Mon% Саша Н
+return
+
+!0::
+loop 100
+{
+	Order_Line%A_Index% :=
+	Order_Number%A_Index% :=
+}
+Current_Line :=
+SendInput ^{vk43}
+sleep 200
+StringSplit, Order_Line, Clipboard, `n, `r
+
+StringSplit, Order_Number, Order_Line1, %A_Tab%
+If (Order_Number0 == 3)
+	MARKETPLACE := "WB"
+If (Order_Number0 == 4)
+	If RegexMatch(Order_Number1, "[0-9]{9}", result)
+		MARKETPLACE := "YANDEX"
+If (Order_Number0 == 4)
+	If RegexMatch(Order_Number1, "\d+-\d+-\d+", result)
+		MARKETPLACE := "OZON"
+SendInput {Alt up}
+return
+
+
+!1::
+If (MARKETPLACE == "OZON")
+	Ozon1()
+If (MARKETPLACE == "WB")
+	WB1()
+If (MARKETPLACE == "YANDEX")
+	YANDEX1()
+SendInput {Alt up}
+return
+
+!2::
+If (MARKETPLACE == "WB")
+	WB2()
+If (MARKETPLACE == "OZON")
+	Ozon2()
+SendInput {Alt up}
+return
+
+!5:: ; Перемещение поставки WB
+DeliveryA :=
+DeliveryN :=
+WinGetActiveTitle, Title
+If InStr(Title, "Поставка")
+{
+	InputBox, DeliveryA, Поставки, Сколько заказов переместить?, , 250, 130
+	DeliveryA -= 1
+	sleep 200
+	Click, %W_3tochkiX% %W_3tochkiY% ; Нажать на верхний заказ
+	SendInput {tab 2}{enter} ; Выбрать перенос в другую поставку
+	sleep 200
+	Click, %W_1PostavkaX% %W_1PostavkaY% ; Выбрать первую поставку
+	InputBox, DeliveryN, Поставки, Какая поставка по счету?, , 250, 130
+	DeliveryN -= 1
+	sleep 200
+	loop %DeliveryN% ; Пролистать до нужной поставки
+		SendInput {down}
+	sleep 100
+	SendInput {tab}{enter}
+	sleep 1100
+	loop %DeliveryA%
+	{
+		If GetKeyState(Esc)
+			break
+		Click, %W_3tochkiX% %W_3tochkiY% ; Нажать на верхний заказ
+		SendInput {tab 2}{enter}
+		sleep 200
+		Click, %W_1PostavkaX% %W_1PostavkaY% ; Выбрать первую поставку
+		sleep 100
+		loop %DeliveryN% ; Пролистать до нужной поставки
+			SendInput {down}
+		sleep 100
+		SendInput {tab}{enter}
+		sleep 1100
+	}
+}
+SendInput {Alt up}
+return
+
+
+{ ; ============= OZON
+Ozon1()
+{
+global
+
+loop 10 ; Чистка вкладок
+{
+	WinGetActiveTitle, Title
+	If InStr(Title, "Ozon: Торговая площадка")
+	{
+		SendInput ^{PgUp} ; Предыдущая вкладка
+		break
+	}
+	sleep 50
+	If InStr(Title, "в интернет-магазине OZON") or If InStr(Title, "posting-label-") or If InStr(Title, "ticket-")
+	{
+		SendInput ^{vk57}		 ; ctrl+W
+		SendInput ^{PgUp}		 ; Предыдущая вкладка
+		sleep 100
+	}
+
+	else If !InStr(Title, "Ozon: Торговая площадка")
+	{
+		SendInput ^{PgUp}		 ; Предыдущая вкладка
+	}
+	sleep 50
+}
+sleep 100
+
+O_Start:
+sleep 100
+loop 5
+	Order_Number%A_Index% :=
+Current_Line += 1
+
+If !Order_Line%Current_Line%
+{
+MsgBox, 262144, OZON, Конец списка
+return
+}
+
+StringSplit, Order_Number, Order_Line%Current_Line%, %A_Tab%
+Clipboard := Order_Number1
+
+If !Order_Number1
+	Goto, O_Start
+
+
+If InStr(Title, "Ozon: Торговая площадка")
+{
+	SendInput ^{vk46}{esc} ; CTRL+F - ESC
+	sleep 100
+	SendInput {Home}
+	sleep 150
+	Click, %O_Vse_GalochkiX% %O_Vse_GalochkiY% ; все галочки
+	sleep 100
+	Click, %O_Vse_GalochkiX% %O_Vse_GalochkiY% ; все галочки
+	sleep 300
+	SendInput ^{vk46} ; CTRL+F
+	sleep 300
+	SendInput ^{vk56} ; CTRL+V
+
+			
+	If (Order_Number3 > 1)		; Проверка количества
+		MsgBox, 262144, OZON, КОЛИЧЕСТВО: %Order_Number3% ; ; Напоминание о количестве
+		
+}
+}
+
+Ozon2()
+{
+global
+
+WinMinimize, ahk_exe AutoHotkeyU64.exe
+sleep 100
+SendInput ^{vk46}{esc} ; CTRL+F - ESC
+sleep 100
+SendInput {Home}
+sleep 150
+SendInput {Home}
+sleep 150
+Click, %O_EtiketkiX% %O_EtiketkiY% ; Распечатать этикетки
+
+Loop 20 ; Цикл проверки загрузки ярлыка
+{
+WinGetActiveTitle, Title
+If InStr(Title, "posting-label-") or If InStr(Title, "ticket-")
+	{
+	sleep 1000
+	SendInput ^{vk50} ; ctrl+P
+	sleep 2000
+	SendInput {enter}
+	sleep 800
+	break
+	}
+sleep 250
+}
+
+loop 10 ; Чистка вкладок
+{
+	WinGetActiveTitle, Title
+	If InStr(Title, "Ozon: Торговая площадка")
+	{
+		break
+	}
+	
+	sleep 50
+	If InStr(Title, "купить в интернет-магазине OZON") or If InStr(Title, "posting-label-") or If InStr(Title, "ticket-")
+	{
+		SendInput ^{vk57}		 ; ctrl+W
+		SendInput ^{PgUp}		 ; Предыдущая вкладка
+		sleep 100
+	}
+
+	else If !InStr(Title, "Ozon: Торговая площадка")
+	{
+		SendInput ^{PgUp}		 ; Предыдущая вкладка
+	}
+	sleep 50
+}
+Clipboard := Order_Number4
+sleep 300
+SendInput {home 2}
+sleep 200
+Click, %O_PoiskX% %O_PoiskY%
+SendInput ^{vk41} ; CTRL+A
+sleep 100
+Sendinput ^{vk56} ; CTRL+V
+sleep 300
+Clipboard := Order_Number2
+SendInput ^{vk46} ; CTRL+F
+sleep 300
+Sendinput ^{vk56} ; CTRL+V
+loop 5
+{
+sleep 300
+SendInput {enter}
+}
+WinActivate, ahk_exe AutoHotkeyU64.exe
+Clipboard := Order_Number4
+}
+
+} ; КОНЕЦ ОЗОНА
+
+
+{ ; ============= WB
+WB1()
+{
+global
+
+loop 10 ; Чистка вкладок
+{
+	WinGetActiveTitle, Title
+
+	If InStr(Title, "Поставка") or InStr(Title, "Новые")
+	break
+
+	If InStr(Title, "в интернет-магазине Wildberries") or If RegexMatch(Title, "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}", result)
+	{
+		SendInput ^{vk57} ; CTRL+W Закрыть вкладку
+	}
+
+	else If !InStr(Title, "Поставка") and !InStr(Title, "Новые")
+	{
+		SendInput ^{PgUp} ; Предыдущая вкладка
+	}
+	sleep 100
+}
+
+W_Start:
+loop 5
+	Order_Number%A_Index% :=
+Current_Line += 1
+
+If !Order_Line%Current_Line%
+{
+MsgBox, 262144, WB, Конец списка
+return
+}
+
+StringSplit, Order_Number, Order_Line%Current_Line%, %A_Tab%
+Clipboard := "Арт.: "Order_Number3
+
+If (Order_Number3 == Old_Number) ; Проверка повтора артикула
+Goto, W_Start
+
+
+sleep 100
+WinGetActiveTitle, Title
+If InStr(Title, "Поставка")
+{
+	SendInput ^{vk46}{esc} ; CTRL+F - ESC
+	sleep 200
+	SendInput {Home}
+	sleep 250
+	Click, %W_Vse_GalochkiX% %W_Vse_GalochkiY% ; все галочки
+	sleep 100
+	Click, %W_Vse_GalochkiX% %W_Vse_GalochkiY% ; все галочки
+	sleep 300
+	SendInput ^{vk46} ; CTRL+F
+	sleep 300
+	SendInput ^{vk56}
+}
+If InStr(Title, "Новые")
+{
+	SendInput ^{vk46} ; CTRL+F
+	sleep 100
+	SendInput ^{vk56}{enter} ; CTRL+V
+}
+Old_Number := Order_Number3
+
+
+AmountCheck(Order_Number3) ; Уведомление о количестве товаров с найденным артикулом
+
+}
+
+WB2()
+{
+global
+WinActivate
+WinGetActiveTitle, Title
+If InStr(Title, "Поставка") or InStr(Title, "Новые")
+{
+Click, M
+SendInput {Home}
+sleep 150
+SendInput {Home}
+sleep 150
+Click, %W_EtiketkiX% %W_EtiketkiY% ; Распечатать этикетки
+sleep 100
+SendInput {tab}{enter}
+Loop 20 ; Цикл проверки загрузки ярлыка
+{
+WinGetActiveTitle, Title
+If RegexMatch(Title, "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}", result)
+	{
+	sleep 2000
+	SendInput ^{vk50} ; ctrl+P
+	sleep 2000
+	SendInput {enter}
+	sleep 500
+	break
+	}
+sleep 250
+}
+
+SendInput ^{PgDn}
+Click, %Center_X% %Center_Y% 0
+}
+}
+
+} ; ==================================== Конец WB
+
+Yandex1() ;===================================================================== Яндекс
+{
+global
+
+loop 10 ; Чистка вкладок
+{
+	WinGetActiveTitle, Title
+	If InStr(Title, "Заказы и отгрузки")
+	{
+		break
+	}
+	If InStr(Title, "на Яндекс Маркете") or If InStr(Title, "Страница товара") or If RegexMatch(Title, "\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", result)
+	{
+		SendInput ^{vk57}		 ; ctrl+W
+		SendInput ^{PgUp}		 ; Предыдущая вкладка
+		sleep 100
+	}
+
+	else If !InStr(Title, "Заказы и отгрузки")
+	{
+		SendInput ^{PgUp}		 ; Предыдущая вкладка
+	}
+	sleep 100
+}
+
+Y_Start:
+sleep 100
+loop 5
+	Order_Number%A_Index% :=
+Current_Line += 1
+
+If !Order_Line%Current_Line%
+{
+SendInput {esc}
+MsgBox, 262144, YANDEX, Конец списка
+return
+}
+
+StringSplit, Order_Number, Order_Line%Current_Line%, %A_Tab%
+
+If !Order_Number1
+	Goto, Y_Start
+
+sleep 100
+WinGetActiveTitle, Title
+If InStr(Title, "Заказы и отгрузки")
+{
+	SendInput {esc}
+	sleep 400
+	SendInput {tab}{home}
+	sleep 200
+	Click, %Y_PoiskX% %Y_PoiskY% 2 			; Окно поиска
+	sleep 300
+	Clipboard := Order_Number1
+	Sendinput ^{vk56}
+	sleep 1500
+	Click, %Y_ZakazX% %Y_ZakazY% 				; Клик на номер заказа
+	sleep 1500
+	Click, 360 495 M 			; Креатив
+	SendInput {LAlt}
+	Click, 360 585 M			; Креатив 2
+	SendInput {LAlt}
+	sleep 200
+	Click, 400 300 				; Ярлык
+	Click, 400 390 				; Ярлык 2
+
+	sleep 3000
+	
+	Loop 60 ; Цикл проверки загрузки ярлыка
+		{
+			WinGetActiveTitle, Title
+			If RegexMatch(Title, "\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", result)
+			{
+			sleep 1800
+			SendInput ^{vk50} ; ctrl+P
+			sleep 2000
+			SendInput {enter}
+			sleep 500
+			SendInput ^{PgDn}
+			sleep 500
+			SendInput {down 2}
+			Click, %Center_X% %Center_Y% 0
+			break
+			}
+			sleep 250
+		}
+		
+	If (Order_Number4 > 1)		; Проверка количества
+		MsgBox, 262144, YANDEX, КОЛИЧЕСТВО: %Order_Number4% ; ; Напоминание о количестве
+}
+return
+}
+
+AmountCheck(Current_Number)
+{
+	AMOUNT_COUNT :=
+	loop 111
+	{
+		loop 5
+		Order_Number%A_Index% :=
+		Current_Line += 1
+
+		StringSplit, Order_Number, Order_Line%Current_Line%, %A_Tab%
+		
+		If (Order_Number3 == Current_Number)
+			AMOUNT_COUNT += 1
+		else 
+		{
+			if (AMOUNT_COUNT > 1) or If !Order_Line%Current_Line%
+			{
+				sleep 100
+				MsgBox, 262144, WB, Найдено: %AMOUNT_COUNT%
+				break
+			}
+		}
+	}
+}
+
+{ ; КОПИРОВАНИЕ В ТАБЛИЦУ
+#IfWinActive
+
+OnClipboardChange:
+If WinActive("ahk_exe chrome.exe")
+{
+	If InStr(Clipboard, "Ваш SKU")
+		CopyYandex()
+	If RegexMatch(Clipboard, "\d+-\d{4}-\d", result) and InStr(Clipboard, "шт.")
+		CopyOzon()
+	If InStr(Clipboard, "2023") and InStr(Clipboard, "Арт.:")
+		CopyWB()
+}
+return
+
+CopyYandex()
+{
+	Loop, parse, clipboard, `n, `r
+	{
+
+	If RegexMatch(A_LoopField, "\d+ \/ (.*)", result)
+	{
+		Resultstring := Resultstring result1 A_Tab
+		Name := true
+	}
+
+	If RegexMatch(A_LoopField, "Ваш SKU: (.*), (.*) шт", result) ; Новый яндекс
+	{
+		If Name
+			Resultstring := Resultstring OldString A_Tab result1 A_Tab result2 "`n"
+		If !Name
+			Resultstring := Resultstring A_tab OldString A_Tab result1 A_Tab result2 "`n"
+
+		Name := false
+	}
+
+	If RegexMatch(A_LoopField, "Ещё \d товар", result)
+		{
+			MsgBox, Есть еще товар, нужно развернуть все заказы
+			break
+		}
+	If A_LoopField
+		OldString := A_LoopField
+	}
+
+	Clipboard := Resultstring
+}
+
+CopyOzon()
+{
+	Loop, parse, clipboard, `n, `r
+	{
+
+	if StrAmount
+	{
+		if A_LoopField
+			Resultstring := Resultstring A_LoopField "`n"
+		StrAmount := false
+	}
+
+
+	If RegexMatch(A_LoopField, "\d+-\d+-\d+", result)
+		{
+		Resultstring := Resultstring result A_Tab
+		Name := true
+		}
+
+	If RegexMatch(A_LoopField, "(.*), (.*) шт\.", result)
+		{
+			If Name
+				Resultstring := Resultstring result1 A_Tab result2 A_Tab
+			if !Name
+				Resultstring := Resultstring A_Tab result1 A_Tab result2 A_Tab
+			StrAmount := true
+			Name := false
+		}
+	}
+	Clipboard := Resultstring
+}
+
+CopyWB() ; WB
+{
+	Loop, parse, clipboard, `n, `r
+	{
+		If RegexMatch(A_LoopField, "Арт.: (.*)", result)
+		{
+		
+		Pos := InStr(OldString, "/")+2
+		OldString := SubStr(OldString, Pos)
+		
+		
+		If InStr(OldString, "час") ;============== Ищем часы
+			and !InStr(OldString, "Band")
+		or InStr(OldString, "watch")
+			and !InStr(OldString, "стекло")
+			and !InStr(OldString, "чехол")
+		or InStr(OldString, "watch")
+			and InStr(OldString, "не стекло")
+		or InStr(OldString, "Elari")
+		or InStr(OldString, "Polar")
+		or InStr(OldString, "Amazfit")
+		{
+			If RegexMatch(OldString, "i) ([a-z].*)", OldStringcut) ; Обрезаем до начала названия модели
+			{
+				Resultstring := Resultstring "\"OldStringcut1 A_Tab result1 "`n"
+			}
+			else ;===================================== Если нет англ. букв
+				Resultstring := Resultstring "\"OldString A_Tab result1 "`n"
+		}
+		else ;==================================== Ищем остальные пленки
+		If InStr(OldString, "нка для") 
+		or InStr(OldString, "пленка")
+		or InStr(OldString, "плёнка")
+		or InStr(OldString, "ая для")
+		or InStr(OldString, "матов")
+		or InStr(OldString, "глянц")
+		or InStr(OldString, "нок для")
+		{
+			If RegexMatch(OldString, "i) ([a-z].*)", OldStringcut) ; Обрезаем до начала названия модели
+			{
+				Resultstring := Resultstring "/"OldStringcut1 A_Tab result1 "`n"
+			}
+			else ;===================================== Если нет англ. букв
+				Resultstring := Resultstring "/"OldString A_Tab result1 "`n"
+		}
+		else ;===================================== Все остальное
+			Resultstring := Resultstring OldString A_Tab result1 "`n"
+		}
+
+		else If RegexMatch(A_LoopField, "\d{9}", result) 
+			Resultstring := Resultstring A_LoopField A_Tab
+
+		If A_LoopField
+			OldString := A_LoopField
+	}
+
+	Clipboard := Resultstring
+} ; Конец CopyWB
+
+}
