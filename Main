@@ -19,7 +19,7 @@ RegexMatch(Updated_Version, "\w.\w", Updated_Version)
 
 If (Script_Version != Updated_Version)
 {
-Updated_text := URLDownloadToVar("https://raw.githubusercontent.com/Oakenlix/IRevive_Brelki/main/Main")
+Updated_text := URLDownloadToVar("https://raw.githubusercontent.com/Oakenlix/IRevive_Plenka/main/Main")
 FileCreateDir, %A_ScriptDir%\Backups
 FileMove, %A_ScriptName%, %A_ScriptDir%\Backups\%A_Hour%%A_Min%-%A_DD%%A_MM%.ahk
 FileAppend, %Updated_text%, %A_ScriptName%
